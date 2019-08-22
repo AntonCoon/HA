@@ -1,2 +1,2 @@
 # HA
-Simple maximum parsimony De novo haplotype assembler
+Simple maximum parsimony De novo **h**aplotype **a**ssembler
