@@ -83,7 +83,42 @@ class DBGraph(object):
             self.adj.pop(vert)
             self.inverse_adj.pop(vert)
 
+    def compression_new(self) -> None:
+        k_mer_len = self.k_mer_len
+        while True:
+            operation_amount = 0
+            all_verts = list(self.adj.keys())
+            for vert in all_verts:
+                out_degree = len(self.adj[vert])
+                in_degree = len(self.inverse_adj[vert])
+                print(vert, in_degree, out_degree)
+                if (in_degree == 1) and (out_degree == 1):
+                    # print(vert, in_degree, out_degree)
+                    operation_amount += 1
+                    prev_vert = list(self.inverse_adj[vert])[0]
+                    in_edge = self.adj[prev_vert][vert]
+                    neighbor = list(self.adj[vert].keys())[0]
+                    out_edge = self.adj[vert][neighbor]
+                    k_mer_1_cov = self.edges[in_edge][1]
+                    k_mer_2_cov = self.edges[out_edge][1]
+                    mean_covering = (k_mer_1_cov + k_mer_2_cov)
+                    self.edges[in_edge][1] = mean_covering
+                    self.edges[in_edge][0] += self.edges[out_edge][0][
+                                              k_mer_len:]
+                    self.adj[prev_vert][neighbor] = self.adj[prev_vert].pop(
+                        vert)
+                    self.adj.pop(vert)
+                    self.inverse_adj[neighbor] -= {vert}
+                    self.inverse_adj.pop(vert)
+                    self.inverse_adj[neighbor].add(prev_vert)
+                else:
+                    print(in_degree, out_degree)
+            break
+            # if operation_amount == 0:
+            #     break
+
     def compression(self) -> None:
+        stat = []
         k_mer_len = self.k_mer_len
         target_vertices = set()
         for vert in self.adj.keys():
@@ -91,6 +126,9 @@ class DBGraph(object):
             out_degree = len(self.inverse_adj[vert])
             if (in_degree == 1) and (out_degree == 1):
                 target_vertices.add(vert)
+        stat.append(len(target_vertices))
+        target_vertices = set(
+            list(target_vertices)[:int(len(target_vertices) // 1.1)])
         while target_vertices:
             vert = target_vertices.pop()
             prev_vert = list(self.inverse_adj[vert])[0]
@@ -107,6 +145,7 @@ class DBGraph(object):
             self.inverse_adj[neighbor] -= {vert}
             self.inverse_adj[neighbor].add(prev_vert)
             self.inverse_adj.pop(vert)
+        # self.compression()
 
     def simplify_tail(self):
         lower_bound = .5

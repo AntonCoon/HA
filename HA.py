@@ -55,6 +55,7 @@ if __name__ == '__main__':
                     DeBruijnPaths.calc_frequencies(
                         haplotypes_through_edge,
                         db_graph,
+                        db_network,
                         all_haplotypes
                     )
                 )
