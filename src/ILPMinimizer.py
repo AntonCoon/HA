@@ -1,4 +1,3 @@
-from src import DeBruijnBuildNetwork
 import gurobipy as gb
 import numpy as np
 
@@ -6,7 +5,7 @@ import numpy as np
 class ILPMinimizer(object):
     def __init__(
             self,
-            db_graph: DeBruijnBuildNetwork.DBGraph,
+            db_graph,
             haplotypes_edges: dict):
         self.db_graph = db_graph
         self.haplotypes_edges = haplotypes_edges

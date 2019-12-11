@@ -47,6 +47,24 @@ class DBGraph(nx.MultiDiGraph):
 
         self.coded_nodes = {v: idx for idx, v in enumerate(self.nodes)}
 
+    def get_edge_substring(self, edge: tuple) -> str:
+        u, v, _ = edge
+        in_degree = self.in_degree(u)
+        out_degree = self.out_degree(v)
+        k = self.k_mer_len
+        if in_degree == 0 and out_degree == 0:
+            # |0--->0|
+            return self.edges[edge]['contig']
+        elif out_degree == 0:
+            # ...0--->0|
+            return self.edges[edge]['contig'][k // 2:]
+        elif in_degree == 0:
+            # |0--->0...
+            return self.edges[edge]['contig'][:-k // 2]
+        else:
+            # |...0--->0...|
+            return self.edges[edge]['contig'][k // 2: -k // 2]
+
     def get_mean_cover(self) -> float:
         sum_covers, amount = 0, 0
         for e, info in self.edges:
@@ -73,16 +91,8 @@ class DBGraph(nx.MultiDiGraph):
                     contig_2 = self.edges[(vertex, next_vert, 0)]['contig']
                     edge_idx = self.add_edge(prev_vert, next_vert)
                     new_edge = self.edges[(prev_vert, next_vert, edge_idx)]
-                    # Debug it!!!
-
-                    l1, l2 = len(contig_1), len(contig_2)
-                    mean_coverage = (cov_1 * l1 + cov_2 * l2) / (l1 + l2)
-                    new_edge['coverage'] = mean_coverage
-
-                    # new_edge['coverage'] = (cov_1 + cov_2) / 2
-
+                    new_edge['coverage'] = cov_1 + cov_2
                     new_edge['contig'] = contig_1 + contig_2[k_mer_len:]
-
                     self.remove_node(vertex)
             if not is_simplified:
                 break
@@ -186,12 +196,41 @@ class DBGraph(nx.MultiDiGraph):
         for e, info in self.edges.items():
             info['coverage'] /= norm_length[e]
 
-        mean_bridges_cover = self.__get_expected_bridges_cover()
-        # print(mean_bridges_cover)
-        for e, info in self.edges.items():
-            info['coverage'] /= mean_bridges_cover
+    def get_heaviest_path(self) -> list:
+        path = []
+        all_src = []
+        for u in self.nodes:
+            in_deg = self.in_degree(u)
+            if in_deg == 0:
+                all_src.append(u)
 
-    def print_encoded_adjacent_list(self):
+        all_start_edges = list()
+        for src in all_src:
+            for u in self.adj[src]:
+                for idx, info in self.adj[src][u].items():
+                    edge, cov = (src, u, idx), info['coverage']
+                    all_start_edges.append((cov, edge))
+
+        _, current_edge = max(all_start_edges)
+        visited = set()
+        while current_edge:
+            path.append(current_edge)
+            visited.add(current_edge)
+            _, current_node, idx = current_edge
+            possible_next_edges = list()
+            for next_node in self.adj[current_node]:
+                for idx, info in self.adj[current_node][next_node].items():
+                    edge = (current_node, next_node, idx)
+                    cov = info['coverage']
+                    possible_next_edges.append((cov, edge))
+            if possible_next_edges:
+                _, current_edge = max(possible_next_edges)
+            if current_edge in visited:
+                break
+
+        return path
+
+    def print_encoded_adjacency_list(self):
         cod = self.coded_nodes
         for v, neighbours in self.adj.items():
             print(cod[v], ': ', end='')

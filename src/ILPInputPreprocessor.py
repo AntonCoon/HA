@@ -1,4 +1,4 @@
-from src import DeBruijnBuildNetwork
+from src import Util
 from collections import defaultdict
 from itertools import product
 import networkx as nx
@@ -6,7 +6,7 @@ import networkx as nx
 
 # noinspection PyCallingNonCallable
 class DataPreprocessor(object):
-    def __init__(self, db_graph: DeBruijnBuildNetwork.DBGraph):
+    def __init__(self, db_graph):
         self.db_graph = db_graph
         self.haplotypes = list()
         self.haplotypes_edges = dict()
@@ -52,19 +52,12 @@ class DataPreprocessor(object):
         for src, dst in product(srcs, dsts):
             for path in nx.all_simple_paths(self.db_graph, src, dst):
                 edge_path = list(zip(path[:-1], path[1:]))
-                all_paths[tuple(path)].append(edge_path[:])
+                all_paths[tuple(path)].append(edge_path)
 
-        k_mer_len = self.db_graph.k_mer_len
         for _, paths in all_paths.items():
             paths = self.__multiply_paths(edges_amount, paths)
             for path in paths:
-                haplotype = ''
-                contig = ''
-                for edge in path:
-                    contig = self.db_graph.edges[edge]['contig']
-                    haplotype += contig[:-k_mer_len]
-                if contig:
-                    haplotype += contig[-k_mer_len:]
-                self.haplotypes.append(haplotype[:])
-                self.haplotypes_edges[haplotype[:]] = path[:]
+                haplotype = Util.get_haplotype_by_path(self.db_graph, path)
+                self.haplotypes.append(haplotype)
+                self.haplotypes_edges[haplotype] = path
         return self.haplotypes, self.haplotypes_edges
