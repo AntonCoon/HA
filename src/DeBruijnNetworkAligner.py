@@ -6,7 +6,6 @@ from bisect import bisect_left
 from bisect import bisect_right
 from collections import defaultdict
 from tqdm import tqdm
-from collections import Counter
 
 
 class AlignedDBNetwork(MultiDiGraph):
@@ -90,6 +89,8 @@ class NetworkAligner(object):
             first_bucket_idx = bisect_right(positions, start) - 1
             last_bucket_idx = bisect_left(positions, end)
             for bucket_id in range(first_bucket_idx, last_bucket_idx):
+                if bucket_id >= len(self.__buckets):
+                    continue
                 bucket = self.__buckets[bucket_id]
                 start_substring = max(bucket[0], start) - start
                 end_substring = min(bucket[1], end) - start
@@ -313,4 +314,3 @@ class NetworkAligner(object):
         self.calculate_coverage()
 
         return self.aligned_db_graph
-

@@ -24,7 +24,7 @@
 # )
 # parser.add_argument(
 #     '--o',
-#     help='path to output file',
+#     help='path to my_output file',
 #     type=str,
 #     default='./haplotypes'
 # )
