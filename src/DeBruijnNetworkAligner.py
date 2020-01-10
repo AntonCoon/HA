@@ -1,7 +1,7 @@
 from src import DeBruijnBuildNetwork
 from src import Util
 from networkx import MultiDiGraph
-from Bio import SeqIO
+# from Bio import SeqIO
 from bisect import bisect_left
 from bisect import bisect_right
 from collections import defaultdict
@@ -69,7 +69,7 @@ class NetworkAligner(object):
                 end -= (k // 2 + k % 2)
             self.edge_alignment[edge] = (start, end)
 
-    def align_reads(self):
+    def align_reads_with_bwa(self):
         coordinates = []
         for e, (start, end) in self.edge_alignment.items():
             coordinates.append(start)
@@ -78,24 +78,25 @@ class NetworkAligner(object):
         self.__positions = positions
         self.__buckets = list(zip(positions[:-1], positions[1:]))
         self.read_alignment = {k: defaultdict(int) for k in self.__buckets}
-        # split read by buckets
-        file_with_reads = SeqIO.parse(
-            self.db_graph.file_path,
-            self.db_graph.format
-        )
-        for read in tqdm(file_with_reads, desc='reads alignment'):
-            read = str(read.seq)
-            start, end = self.align(self.reference, read)
-            first_bucket_idx = bisect_right(positions, start) - 1
-            last_bucket_idx = bisect_left(positions, end)
-            for bucket_id in range(first_bucket_idx, last_bucket_idx):
-                if bucket_id >= len(self.__buckets):
+        # align and split reads by buckets
+        path_to_reads = self.db_graph.file_path
+        with Util.BWAContextManager(path_to_reads, self.reference) as bwa:
+            for read_object in bwa.sam_file:
+                read = read_object.seq
+                start, end = read_object.pos, read_object.aend
+                if read_object.rlen != end - start:
                     continue
-                bucket = self.__buckets[bucket_id]
-                start_substring = max(bucket[0], start) - start
-                end_substring = min(bucket[1], end) - start
-                sub_read = read[start_substring: end_substring]
-                self.read_alignment[bucket][sub_read] += 1
+                first_bucket_idx = bisect_right(positions, start) - 1
+                last_bucket_idx = bisect_left(positions, end)
+                for bucket_id in range(first_bucket_idx, last_bucket_idx):
+                    if bucket_id >= len(self.__buckets):
+                        # should be fixed
+                        continue
+                    bucket = self.__buckets[bucket_id]
+                    start_substring = max(bucket[0], start) - start
+                    end_substring = min(bucket[1], end) - start
+                    sub_read = read[start_substring: end_substring]
+                    self.read_alignment[bucket][sub_read] += 1
 
     def split_db_graph(self):
         positions = self.__positions
@@ -309,7 +310,7 @@ class NetworkAligner(object):
 
     def get_aligned_db_graph(self) -> DeBruijnBuildNetwork.DBGraph:
         self.align_db_graph()
-        self.align_reads()
+        self.align_reads_with_bwa()
         self.split_db_graph()
         self.calculate_coverage()
 

@@ -1,12 +1,16 @@
-from networkx import MultiDiGraph
 import editdistance
+import subprocess
+import tempfile
+import shutil
+import pysam
+from os import path
 from collections import defaultdict
 from ortools.linear_solver import pywraplp
+from networkx import MultiDiGraph
 
 
-def get_haplotype_by_path(db_graph, path: list) -> str:
-    haplotype = ''.join([db_graph.get_edge_substring(e) for e in path])
-    return haplotype
+def get_haplotype_by_path(db_graph, edge_path: list) -> str:
+    return ''.join([db_graph.get_edge_substring(e) for e in edge_path])
 
 
 def get_in_edges(graph: MultiDiGraph, node) -> list:
@@ -86,3 +90,39 @@ def read_vgflow(path_to_file: str) -> list:
             else:
                 sh_hapls.append(line)
     return get_normalize_pair_list(list(zip(sh_hapls, sh_frecs)))
+
+
+class BWAContextManager(object):
+    def __init__(self, path_to_reads: str, ref: str):
+        self.ref = ref
+        self.path_to_reads = path_to_reads
+        self.tmp_dir = tempfile.mkdtemp(dir='.')
+        self.sam_file = None
+
+    def __run_bwa_mem(self):
+        command = [
+            'bwa',
+            'mem',
+            path.join(self.tmp_dir, 'ref.fasta'),
+            self.path_to_reads,
+            '-o',
+            path.join(self.tmp_dir, 'align.sam')
+        ]
+        subprocess.run(['bwa', 'index', path.join(self.tmp_dir, 'ref.fasta')])
+        subprocess.run(
+            command,
+            stdout=subprocess.PIPE
+        )
+
+    def __enter__(self):
+        with open(path.join(self.tmp_dir, 'ref.fasta'), 'w') as ref_fie:
+            ref_fie.write('>ref\n')
+            ref_fie.write(self.ref)
+        self.__run_bwa_mem()
+        self.sam_file = pysam.AlignmentFile(
+            path.join(self.tmp_dir, 'align.sam'))
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        shutil.rmtree(self.tmp_dir)
