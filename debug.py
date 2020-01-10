@@ -12,7 +12,7 @@ from src import Util
 from bisect import bisect_left
 from bisect import bisect_right
 
-file_path = './cases/input/base_case_81_3/reads.fastq'
+file_path = './cases/input/base_case_4_2/reads.fastq'
 # file_path = './example/simulation_60_30_10.fasta'
 # file_path = './example/simulation_heaviest.fasta'
 # file_path = './example/simulation_2e8_path_70_30.fasta'
@@ -42,7 +42,6 @@ for e, (start, end) in aligner.edge_alignment.items():
         start,
         end
     )
-
 
 # aligner.align_reads()
 # aligner.split_db_graph()

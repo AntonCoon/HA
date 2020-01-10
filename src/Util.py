@@ -108,10 +108,15 @@ class BWAContextManager(object):
             '-o',
             path.join(self.tmp_dir, 'align.sam')
         ]
-        subprocess.run(['bwa', 'index', path.join(self.tmp_dir, 'ref.fasta')])
+        subprocess.run(
+            ['bwa', 'index', path.join(self.tmp_dir, 'ref.fasta')],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
         subprocess.run(
             command,
-            stdout=subprocess.PIPE
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
         )
 
     def __enter__(self):
