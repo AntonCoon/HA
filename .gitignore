@@ -107,8 +107,8 @@ venv.bak/
 .idea
 
 # test data files
-./golden_dataset
-./tmp_plots
-./cases/input
-./cases/my_output
-./cases/savage+vg-flow
+./golden_dataset/
+./tmp_plots/
+./cases/input/
+./cases/my_output/
+./cases/savage+vg-flow/
