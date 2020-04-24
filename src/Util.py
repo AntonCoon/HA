@@ -25,6 +25,14 @@ def flatten(nested_list: list) -> list:
     return [elem for sublist in nested_list for elem in sublist]
 
 
+def k_mer_pairs(read, k):
+    size = len(read)
+    if size < k:
+        return None, None
+    for i in range(size - k):
+        yield read[i:(i + k)], read[(i + 1):(i + k + 1)]
+
+
 def earth_mover_distance(dist1: list, dist2: list) -> float:
     solver = pywraplp.Solver(
         'earth_mover_distance',
@@ -93,7 +101,7 @@ def read_vgflow(path_to_file: str) -> list:
 
 
 class BWAContextManager(object):
-    def __init__(self, path_to_reads: str, ref: str):
+    def __init__(self, path_to_reads: list, ref: str):
         self.ref = ref
         self.path_to_reads = path_to_reads
         self.tmp_dir = tempfile.mkdtemp(dir='.')
@@ -104,7 +112,7 @@ class BWAContextManager(object):
             'bwa',
             'mem',
             path.join(self.tmp_dir, 'ref.fasta'),
-            self.path_to_reads,
+            *self.path_to_reads,
             '-o',
             path.join(self.tmp_dir, 'align.sam')
         ]
@@ -131,3 +139,15 @@ class BWAContextManager(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         shutil.rmtree(self.tmp_dir)
+
+
+class KMer(object):
+    def __init__(self, seq, position):
+        self.seq = seq
+        self.pos = position
+
+    def __hash__(self):
+        return hash((self.seq, str(self.pos)))
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()

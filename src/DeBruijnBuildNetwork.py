@@ -2,14 +2,7 @@ from Bio import SeqIO
 import networkx as nx
 from copy import deepcopy
 from collections import Counter
-
-
-def k_mer_pairs(read, k):
-    size = len(read)
-    if size < k:
-        return None, None
-    for i in range(size - k):
-        yield read[i:(i + k)], read[(i + 1):(i + k + 1)]
+import Util
 
 
 # noinspection PyCallingNonCallable
@@ -32,7 +25,11 @@ class DBGraph(nx.MultiDiGraph):
         read = ''
         for read in file_with_reads:
             read = str(read.seq)
-            for k_mer_1, k_mer_2 in k_mer_pairs(read, self.k_mer_len):
+            if len(read) <= self.k_mer_len:
+                continue
+            if set(read.lower()) != set('atgc'):
+                continue
+            for k_mer_1, k_mer_2 in Util.k_mer_pairs(read, self.k_mer_len):
                 contig = k_mer_1 + k_mer_2[-1]
                 if (k_mer_1, k_mer_2) in self.edges:
                     self.edges[(k_mer_1, k_mer_2, 0)]['coverage'] += 1
@@ -108,7 +105,7 @@ class DBGraph(nx.MultiDiGraph):
         while True:
             mean_cover = self.get_mean_cover()
             target_tails = []
-            for e, info in self.edges.items:
+            for e, info in self.edges.items():
                 is_start = (self.in_degree(e[0]) + self.out_degree(e[0])) == 1
                 is_end = (self.out_degree(e[1]) + self.in_degree(e[1])) == 1
                 if is_start or is_end and info['coverage'] < lbnd * mean_cover:

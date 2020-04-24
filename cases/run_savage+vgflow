@@ -1,0 +1,6 @@
+conda activate
+savage -s ../../input/base_case_1_1/reads.fastq --min_overlap_len 50 --split 1 -o .
+source activate vg-flow-deps
+python3 /home/anton/Desktop/Summer2019/vg-flow/vg-flow/scripts/build_graph_msga.py -f ../../input/base_case_1_1/reads.fastq -c contigs_stage_c.fasta -vg /home/anton/Desktop/Summer2019/vg-flow/vg-flow/vg -t 2
+python3 /home/anton/Desktop/Summer2019/vg-flow/vg-flow/scripts/vg-flow.py -m 1 -c 2 node_abundance.txt contig_graph.final.gfa
+conda deactivate

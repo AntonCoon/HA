@@ -1,45 +1,56 @@
-# import argparse
-# from src import DeBruijnBuild
-# from src import DeBruijnPaths
-#
-# parser = argparse.ArgumentParser(
-#     description='Simple maximum parsimony de novo Haplotype Assembler')
-#
-# parser.add_argument(
-#     '--reads',
-#     help='path to origin read',
-#     type=str
-# )
-# parser.add_argument(
-#     '--format',
-#     help='reads file format',
-#     type=str,
-#     default='fasta'
-# )
-# parser.add_argument(
-#     '--k',
-#     help='length of k-mer for De Bruijn graph',
-#     default=60,
-#     type=int
-# )
-# parser.add_argument(
-#     '--o',
-#     help='path to my_output file',
-#     type=str,
-#     default='./haplotypes'
-# )
-#
-#
-# if __name__ == '__main__':
-#     args = vars(parser.parse_args())
-#
-#     file_path = args['reads']
-#     file_extension = args['format']
-#     k_mer_len = args['k']
-#     out_path = args['o']
-#
-#     db_graph = DeBruijnBuild.DBGraph(file_path, file_extension, k_mer_len)
-#     db_graph.compression()
+import argparse
+import pickle
+from src import DeBruijnBuildNetwork
+
+parser = argparse.ArgumentParser(
+    description='Simple maximum parsimony de novo Haplotype Assembler')
+
+parser.add_argument(
+    '--reads',
+    help='path to origin read',
+    type=str
+)
+
+parser.add_argument(
+    '--format',
+    help='reads file format',
+    type=str,
+    default='fasta'
+)
+
+parser.add_argument(
+    '--k',
+    help='length of k-mer for De Bruijn graph',
+    default=61,
+    type=int
+)
+
+parser.add_argument(
+    '--o',
+    help='path to my_output file',
+    type=str,
+    default='./haplotypes'
+)
+
+
+if __name__ == '__main__':
+    args = vars(parser.parse_args())
+
+    file_path = args['reads']
+    file_extension = args['format']
+    k_mer_len = args['k']
+    out_path = args['o']
+
+    db_graph = DeBruijnBuildNetwork.DBGraph(
+        file_path, file_extension, k_mer_len
+    )
+    db_graph.build()
+    db_graph.compression()
+
+    with open("db_graph.pickle", "wb") as file:
+        pickle.dump(db_graph, file)
+
+
 #     db_graph.simplify_bad_cover()
 #     db_graph.update_coverage()
 #

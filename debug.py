@@ -11,37 +11,68 @@ from src import DeBruijnNetworkAligner
 from src import Util
 from bisect import bisect_left
 from bisect import bisect_right
+import pickle
+from Bio import SeqIO
+from time import time
+from src import AlignedDB
 
-file_path = './cases/input/base_case_4_2/reads.fastq'
-# file_path = './example/simulation_60_30_10.fasta'
-# file_path = './example/simulation_heaviest.fasta'
-# file_path = './example/simulation_2e8_path_70_30.fasta'
-# file_path = './example/simulation_2e8_path_60_30_10.fasta'
-# file_path = './example/silly.fasta'
+path_to_ref = "test/ref.fa"
 
-k_mer_len = 60
-file_extension = 'fastq'
-db_graph = DeBruijnBuildNetwork.DBGraph(
-    file_path,
-    file_extension,
-    k_mer_len)
-db_graph.build()
-db_graph.compression()
+db = AlignedDB.AlignedDB(
+    ["test/read1.fq", "test/read2.fq"],
+    path_to_ref,
+    "fastq",
+    k_mer_len=71
+)
 
-path = db_graph.get_heaviest_path()
-hap = Util.get_haplotype_by_path(db_graph, path)
+db.build_ref()
+db.build()
 
-aligner = DeBruijnNetworkAligner.NetworkAligner(db_graph)
-aligner.align_db_graph()
+pos = list(range(len(db.ref) - db.k + 1))
+kmerhist = [len(db.baskets[i]) for i in pos]
 
-print()
-print(hap)
-for e, (start, end) in aligner.edge_alignment.items():
-    print(
-        '_' * start + db_graph.get_edge_substring(e) + '_' * (len(hap) - end),
-        start,
-        end
-    )
+plt.plot(pos, kmerhist)
+plt.show()
+
+# path = '../data/simulations/u1.5e-5_s200_Ne1000/sequences00001/read1.fq'
+#
+#
+# k_mer_len = 60
+# file_extension = 'fastq'
+# file_with_reads = SeqIO.parse(path, file_extension)
+#
+# # init = time()
+# # amount = 0
+# # for _ in file_with_reads:
+# #     amount += 1
+# #
+# # print(amount)
+#
+#
+# db_graph = DeBruijnBuildNetwork.DBGraph(
+#     path,
+#     file_extension,
+#     k_mer_len)
+# db_graph.build()
+# # db_graph.compression()
+#
+# with open("db_graph.pickle", "wb") as file:
+#     pickle.dump(db_graph, file)
+
+# path = db_graph.get_heaviest_path()
+# hap = Util.get_haplotype_by_path(db_graph, path)
+#
+# aligner = DeBruijnNetworkAligner.NetworkAligner(db_graph)
+# aligner.align_db_graph()
+#
+# print()
+# print(hap)
+# for e, (start, end) in aligner.edge_alignment.items():
+#     print(
+#         '_' * start + db_graph.get_edge_substring(e) + '_' * (len(hap) - end),
+#         start,
+#         end
+#     )
 
 # aligner.align_reads()
 # aligner.split_db_graph()
