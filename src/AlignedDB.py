@@ -23,6 +23,7 @@ class AlignedDB(nx.DiGraph):
         self.ref = str(next(self.ref).seq)
         self.baskets = dict()
         self.haplotypes = []
+        self.ref_edges = set()
 
     def get_edge_substring(self, edge: tuple) -> str:
         u, v = edge
@@ -49,8 +50,8 @@ class AlignedDB(nx.DiGraph):
             self.add_edge(kmer1, kmer2)
             self.edges[(kmer1, kmer2)]['coverage'] = 1
             self.edges[(kmer1, kmer2)]['contig'] = contig
-            self.baskets[i] = {kmer1}
-            self.baskets[i + 1] = {kmer2}
+            self.baskets[(i, i + 1)] = {(kmer1, kmer2)}
+            self.ref_edges.add((kmer1, kmer2))
 
     def build(self):
         self.build_ref()
@@ -75,14 +76,12 @@ class AlignedDB(nx.DiGraph):
                     contig = u.seq + v.seq[-1]
                     if (u, v) in self.edges:
                         self.edges[(u, v)]['coverage'] += 1
-                        self.baskets[u.pos].add(u.seq)
-                        self.baskets[v.pos].add(v.seq)
+                        self.baskets[(u.pos, v.pos)].add((u, v))
                     else:
                         self.add_edge(u, v)
                         self.edges[(u, v)]['coverage'] = 1
                         self.edges[(u, v)]['contig'] = contig
-                        self.baskets[u.pos].add(u.seq)
-                        self.baskets[v.pos].add(v.seq)
+                        self.baskets[(u.pos, v.pos)].add((u, v))
 
     def find_haplotypes(self) -> list:
         self.haplotypes = []

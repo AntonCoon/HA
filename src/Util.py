@@ -3,10 +3,12 @@ import subprocess
 import tempfile
 import shutil
 import pysam
+import networkx as nx
 from os import path
 from collections import defaultdict
 from ortools.linear_solver import pywraplp
 from networkx import MultiDiGraph
+from networkx import DiGraph
 
 
 def get_haplotype_by_path(db_graph, edge_path: list) -> str:
@@ -151,3 +153,15 @@ class KMer(object):
 
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
+
+
+def split_graph_by_paths(graph: DiGraph) -> list:
+    paths = [[]]
+    dfs_result = nx.edge_dfs(graph)
+    for e in dfs_result:
+        paths[-1].append(e)
+        indeg, outdeg = graph.in_degree(e[1]), graph.out_degree(e[1])
+        if indeg != 1 or outdeg != 1:
+            paths.append([])
+    paths = [p for p in paths if p]
+    return paths
