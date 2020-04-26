@@ -3,6 +3,7 @@ import networkx as nx
 from src import Util
 from itertools import product
 from collections import defaultdict
+from tqdm import tqdm
 
 
 class AlignedDB(nx.DiGraph):
@@ -57,7 +58,7 @@ class AlignedDB(nx.DiGraph):
         self.build_ref()
         aligned_reads = defaultdict(list)
         with Util.BWAContextManager(self.path_to_reads, self.ref) as bwa:
-            for read_object in bwa.sam_file:
+            for read_object in tqdm(bwa.sam_file):
                 read = read_object.seq
                 start, end = read_object.pos, read_object.aend
                 # take just whole aligned data

@@ -107,18 +107,27 @@ class SplitTest(unittest.TestCase):
             sorted(paths_decomposition)
         )
 
+        graph = nx.DiGraph()
+        graph.add_edge(1, 2)
+        self.assertEqual(
+            sorted(Util.split_graph_by_paths(graph)),
+            [[(1, 2)]]
+        )
+
 
 # Preprocessor test
 class PreprocessorTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        path_to_ref = "test/minimal_test/ref.fa"
+        self.path_to_ref = "test/ref.fa"
+
         db = AlignedDB.AlignedDB(
-            ["test/minimal_test/reads.fa"],
-            path_to_ref,
-            "fasta",
-            k_mer_len=51
+            ["test/read1.fq", "test/read2.fq"],
+            self.path_to_ref,
+            "fastq",
+            k_mer_len=61
         )
+
         db.build_ref()
         db.build()
         self.prep = AlignedDBPreprocessor.AlignedDBPreprocessor(db, .9)
@@ -148,6 +157,33 @@ class PreprocessorTest(unittest.TestCase):
                     self.assertEqual(
                         cov, self.prep.aligned_db.edges[e]["coverage"]
                     )
+
+    def test_clearing(self):
+        srcs_before, dsts_before = set(), set()
+        for vertex in self.prep.aligned_db.nodes:
+            indeg = self.prep.aligned_db.in_degree(vertex)
+            outdeg = self.prep.aligned_db.out_degree(vertex)
+            if indeg == 0:
+                srcs_before.add(vertex)
+            elif outdeg == 0:
+                dsts_before.add(vertex)
+        n_edge_before = len(self.prep.aligned_db.edges)
+
+        self.prep.eriksson_clear()
+
+        srcs_after, dsts_after = set(), set()
+        for vertex in self.prep.aligned_db.nodes:
+            indeg = self.prep.aligned_db.in_degree(vertex)
+            outdeg = self.prep.aligned_db.out_degree(vertex)
+            if indeg == 0:
+                srcs_after.add(vertex)
+            elif outdeg == 0:
+                dsts_after.add(vertex)
+        n_edge_after = len(self.prep.aligned_db.edges)
+
+        self.assertEqual(srcs_before, srcs_after)
+        self.assertEqual(dsts_before, dsts_after)
+        self.assertGreaterEqual(n_edge_before, n_edge_after)
 
 
 if __name__ == "__main__":
