@@ -2,7 +2,6 @@ from src import AlignedDB
 from src import Util
 from Bio import SeqIO
 from math import log
-from tqdm import tqdm
 
 
 class AlignedDBPreprocessor(object):
@@ -15,9 +14,18 @@ class AlignedDBPreprocessor(object):
         self.reference_size = len(self.aligned_db.ref)
         self.read_len = 0
         self.reads_amount = 0
+        self.eriksson_threshold = None
 
     def normalize_parallel(self):
         for basket, edges in self.aligned_db.baskets.items():
+            basket_norm = sum(
+                [self.aligned_db.get_edge_data(*e)["coverage"] for e in edges]
+            )
+            for e in edges:
+                if e not in self.aligned_db.ref_edges:
+                    self.aligned_db.edges[e]["coverage"] /= basket_norm
+                else:
+                    self.aligned_db.edges[e]["coverage"] = 1
             basket_norm = sum(
                 [self.aligned_db.get_edge_data(*e)["coverage"] for e in edges]
             )
@@ -49,10 +57,14 @@ class AlignedDBPreprocessor(object):
         p = self.probability
         L = self.read_len
         N = self.reads_amount
-        threshold = - n * log(1 - p ** (1 / n)) / (L * N)
+        self.eriksson_threshold = - n * log(1 - p ** (1 / n)) / (L * N)
         targeted_edges = set()
         for e, info in self.aligned_db.edges.items():
-            if info["coverage"] < threshold:
+            if info["coverage"] < self.eriksson_threshold:
                 targeted_edges.add(e)
-        for e in tqdm(targeted_edges):
+        for e in targeted_edges:
             self.aligned_db.remove_edge(*e)
+            busket_key = (e[0].pos, e[1].pos)
+            self.aligned_db.baskets[busket_key].remove(e)
+        self.normalize_parallel()
+        self.mean_by_path_parallel()

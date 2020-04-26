@@ -15,24 +15,56 @@ import pickle
 from Bio import SeqIO
 from time import time
 from src import AlignedDB
+from src import AlignedDBPreprocessor
 
 path_to_ref = "test/ref.fa"
 
-db = AlignedDB.AlignedDB(
+aligned_db = AlignedDB.AlignedDB(
     ["test/read1.fq", "test/read2.fq"],
     path_to_ref,
     "fastq",
-    k_mer_len=71
+    k_mer_len=59
 )
 
-db.build_ref()
-db.build()
+aligned_db.build_ref()
+aligned_db.build()
 
-pos = list(range(len(db.ref) - db.k + 1))
-kmerhist = [len(db.baskets[i]) for i in pos]
+prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 0.95)
+prep.normalize_parallel()
+prep.mean_by_path_parallel()
+prep.eriksson_clear()
 
-plt.plot(pos, kmerhist)
-plt.show()
+aligned_db = prep.aligned_db
+
+ilp_prep = ILPInputPreprocessor.DataPreprocessor(aligned_db)
+haplotypes, _ = ilp_prep.find_haplotypes()
+print('haplotype amount', len(set(haplotypes)))
+
+minimizer = ILPMinimizer.ILPMinimizer(
+    aligned_db, ilp_prep.haplotypes_edges)
+
+minimizer.find_alpha(0)
+big_val, result = minimizer.find_frequencies()
+
+result = [(h, f) for h, f in result.items() if f > prep.eriksson_threshold]
+result = Util.get_normalize_pair_list(result)
+
+print([f for h, f in result])
+gt = Util.read_ground_truth('./test/gt.txt')
+print("ref", Util.earth_mover_distance([(aligned_db.ref, 1)], gt))
+print(len(result), len(gt))
+print("result", Util.earth_mover_distance(result, gt))
+
+predict_path = "../sandbox/predicthaplo_results/smallest_global_8_1617.fas"
+predict_result = []
+predict_result_file = SeqIO.parse(predict_path, "fasta")
+for seq in predict_result_file:
+    content = seq.seq.split("EndOfComments")
+    h = str(content[-1])
+    f = float(str(content[0].split(";")[1].split(":")[1]))
+    predict_result.append((h, f))
+print(len(predict_result))
+print("result", Util.earth_mover_distance(predict_result, gt))
 
 # path = '../data/simulations/u1.5e-5_s200_Ne1000/sequences00001/read1.fq'
 #

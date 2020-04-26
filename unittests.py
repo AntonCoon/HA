@@ -69,7 +69,8 @@ class BuildTest(unittest.TestCase):
                 [h, _] = line.strip().split()
                 gt.add(h)
 
-        res = set(db.find_haplotypes())
+        res, _ = db.find_haplotypes()
+        res = set(res)
         self.assertTrue(gt.issubset(res))
 
 

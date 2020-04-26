@@ -2,6 +2,8 @@ from src import Util
 from collections import defaultdict
 from itertools import product
 import networkx as nx
+from src import AlignedDB
+from src import DeBruijnBuildNetwork
 
 
 # noinspection PyCallingNonCallable
@@ -32,7 +34,7 @@ class DataPreprocessor(object):
             modified_paths.append(new_path)
         return modified_paths
 
-    def find_haplotypes(self) -> tuple:
+    def __find_haplotypes_in_simple_db(self) -> tuple:
         self.haplotypes = []
         srcs = []
         dsts = []
@@ -61,3 +63,16 @@ class DataPreprocessor(object):
                 self.haplotypes.append(haplotype)
                 self.haplotypes_edges[haplotype] = path
         return self.haplotypes, self.haplotypes_edges
+
+    def __find_haplotypes_in_aligned_db(self) -> tuple:
+        haps, edges = self.db_graph.find_haplotypes()
+        self.haplotypes, self.haplotypes_edges = haps, edges
+        return self.haplotypes, self.haplotypes_edges
+
+    def find_haplotypes(self):
+        if isinstance(self.db_graph, AlignedDB.AlignedDB):
+            return self.__find_haplotypes_in_aligned_db()
+        elif isinstance(self.db_graph, DeBruijnBuildNetwork.DBGraph):
+            return self.__find_haplotypes_in_simple_db()
+        else:
+            raise ValueError("graph should have type AlignedDB or DBGraph")

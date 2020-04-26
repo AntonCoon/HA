@@ -84,8 +84,9 @@ class AlignedDB(nx.DiGraph):
                         self.edges[(u, v)]['contig'] = contig
                         self.baskets[(u.pos, v.pos)].add((u, v))
 
-    def find_haplotypes(self) -> list:
+    def find_haplotypes(self) -> tuple:
         self.haplotypes = []
+        haplotypes_edges = dict()
         srcs = []
         dsts = []
         for vertex in self.nodes:
@@ -101,4 +102,5 @@ class AlignedDB(nx.DiGraph):
                 edge_path = list(zip(path[:-1], path[1:]))
                 haplotype = Util.get_haplotype_by_path(self, edge_path)
                 self.haplotypes.append(haplotype)
-        return self.haplotypes
+                haplotypes_edges[haplotype] = edge_path
+        return self.haplotypes, haplotypes_edges
