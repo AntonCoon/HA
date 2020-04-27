@@ -64,7 +64,7 @@ if __name__ == '__main__':
     aligned_db.build()
 
     # Make normalization of aligned De Bruijn graph
-    prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 0.90)
+    prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 0.99)
     prep.normalize_parallel()
     prep.mean_by_path_parallel()
     prep.eriksson_clear()

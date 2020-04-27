@@ -20,21 +20,26 @@ from src import AlignedDBPreprocessor
 path_to_ref = "test/ref.fa"
 
 aligned_db = AlignedDB.AlignedDB(
-    ["test/read1.fq", "test/read2.fq"],
+    [
+        "../data/small_simul/u1.5e-5_s40_Ne1000/sequences00001/read1.fq",
+        "../data/small_simul/u1.5e-5_s40_Ne1000/sequences00001/read2.fq"
+    ],
     path_to_ref,
     "fastq",
-    k_mer_len=59
+    k_mer_len=61
 )
 
 aligned_db.build_ref()
 aligned_db.build()
 
-prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 0.95)
+prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 0.9999999999)
 prep.normalize_parallel()
 prep.mean_by_path_parallel()
 prep.eriksson_clear()
 
 aligned_db = prep.aligned_db
+
+print(aligned_db.number_of_edges())
 
 ilp_prep = ILPInputPreprocessor.DataPreprocessor(aligned_db)
 haplotypes, _ = ilp_prep.find_haplotypes()
@@ -43,14 +48,16 @@ print('haplotype amount', len(set(haplotypes)))
 minimizer = ILPMinimizer.ILPMinimizer(
     aligned_db, ilp_prep.haplotypes_edges)
 
-minimizer.find_alpha(prep.eriksson_threshold)
+minimizer.find_alpha(prep.eriksson_threshold / 10)
 big_val, result = minimizer.find_frequencies()
 
 result = [(h, f) for h, f in result.items() if f > prep.eriksson_threshold]
 result = Util.get_normalize_pair_list(result)
 
 print([f for h, f in result])
-gt = Util.read_ground_truth('./test/gt.txt')
+gt = Util.read_ground_truth(
+    "../data/small_simul/u1.5e-5_s40_Ne1000/sequences00001/gt.txt"
+)
 print("ref", Util.earth_mover_distance([(aligned_db.ref, 1)], gt))
 print(len(result), len(gt))
 print("result", Util.earth_mover_distance(result, gt))

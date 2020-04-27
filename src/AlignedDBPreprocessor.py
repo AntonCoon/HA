@@ -2,6 +2,7 @@ from src import AlignedDB
 from src import Util
 from Bio import SeqIO
 from math import log
+from tqdm import tqdm
 
 
 class AlignedDBPreprocessor(object):
@@ -59,12 +60,12 @@ class AlignedDBPreprocessor(object):
         N = self.reads_amount
         self.eriksson_threshold = - n * log(1 - p ** (1 / n)) / (L * N)
         targeted_edges = set()
-        for e, info in self.aligned_db.edges.items():
+        for e, info in tqdm(self.aligned_db.edges.items()):
             if info["coverage"] < self.eriksson_threshold:
                 targeted_edges.add(e)
         for e in targeted_edges:
             self.aligned_db.remove_edge(*e)
-            busket_key = (e[0].pos, e[1].pos)
-            self.aligned_db.baskets[busket_key].remove(e)
+            basket_key = (e[0].pos, e[1].pos)
+            self.aligned_db.baskets[basket_key].remove(e)
         self.normalize_parallel()
         self.mean_by_path_parallel()

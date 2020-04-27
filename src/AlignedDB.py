@@ -62,6 +62,8 @@ class AlignedDB(nx.DiGraph):
                 read = read_object.seq
                 start, end = read_object.pos, read_object.aend
                 # take just whole aligned data
+                if start is None or end is None or read is None:
+                    continue
                 if end - start != len(read):
                     continue
                 aligned_reads[read].append(start)
