@@ -2,7 +2,7 @@ from Bio import SeqIO
 import networkx as nx
 from copy import deepcopy
 from collections import Counter
-import Util
+from src import Util
 
 
 # noinspection PyCallingNonCallable

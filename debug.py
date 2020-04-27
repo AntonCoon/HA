@@ -43,7 +43,7 @@ print('haplotype amount', len(set(haplotypes)))
 minimizer = ILPMinimizer.ILPMinimizer(
     aligned_db, ilp_prep.haplotypes_edges)
 
-minimizer.find_alpha(0)
+minimizer.find_alpha(prep.eriksson_threshold)
 big_val, result = minimizer.find_frequencies()
 
 result = [(h, f) for h, f in result.items() if f > prep.eriksson_threshold]
@@ -55,16 +55,16 @@ print("ref", Util.earth_mover_distance([(aligned_db.ref, 1)], gt))
 print(len(result), len(gt))
 print("result", Util.earth_mover_distance(result, gt))
 
-predict_path = "../sandbox/predicthaplo_results/smallest_global_8_1617.fas"
-predict_result = []
-predict_result_file = SeqIO.parse(predict_path, "fasta")
-for seq in predict_result_file:
-    content = seq.seq.split("EndOfComments")
-    h = str(content[-1])
-    f = float(str(content[0].split(";")[1].split(":")[1]))
-    predict_result.append((h, f))
-print(len(predict_result))
-print("result", Util.earth_mover_distance(predict_result, gt))
+# predict_path = "../sandbox/predicthaplo_results/smallest_global_8_1617.fas"
+# predict_result = []
+# predict_result_file = SeqIO.parse(predict_path, "fasta")
+# for seq in predict_result_file:
+#     content = seq.seq.split("EndOfComments")
+#     h = str(content[-1])
+#     f = float(str(content[0].split(";")[1].split(":")[1]))
+#     predict_result.append((h, f))
+# print(len(predict_result))
+# print("result", Util.earth_mover_distance(predict_result, gt))
 
 # path = '../data/simulations/u1.5e-5_s200_Ne1000/sequences00001/read1.fq'
 #
