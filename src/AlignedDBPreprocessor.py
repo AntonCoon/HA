@@ -23,10 +23,11 @@ class AlignedDBPreprocessor(object):
                 [self.aligned_db.get_edge_data(*e)["coverage"] for e in edges]
             )
             for e in edges:
-                if e not in self.aligned_db.ref_edges:
-                    self.aligned_db.edges[e]["coverage"] /= basket_norm
-                else:
-                    self.aligned_db.edges[e]["coverage"] = 1
+                self.aligned_db.edges[e]["coverage"] /= basket_norm
+                # if e not in self.aligned_db.ref_edges:
+                #     self.aligned_db.edges[e]["coverage"] /= basket_norm
+                # else:
+                #     self.aligned_db.edges[e]["coverage"] = 1
             basket_norm = sum(
                 [self.aligned_db.get_edge_data(*e)["coverage"] for e in edges]
             )

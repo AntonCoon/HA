@@ -74,6 +74,35 @@ class BuildTest(unittest.TestCase):
         self.assertTrue(gt.issubset(res))
 
 
+class DeletionsTest(unittest.TestCase):
+
+    def test_graph_with_gaps(self):
+        self.path_to_ref = "test/gap_test/ref.fa"
+
+        db = AlignedDB.AlignedDB(
+            ["test/gap_test/reads.fa"],
+            self.path_to_ref,
+            "fasta",
+            k_mer_len=51
+        )
+
+        db.build_ref()
+        db.build()
+
+        gt = set()
+        with open("test/gap_test/gt.txt", "r") as file:
+            for line in file:
+                [h, _] = line.strip().split()
+                gt.add(h)
+
+        res, _ = db.find_haplotypes()
+        res = ["".join([ch for ch in h if ch != "_"]) for h in res]
+        for h in res:
+            print(h)
+        res = set(res)
+        self.assertTrue(gt.issubset(res))
+
+
 # Util function tests
 class SplitTest(unittest.TestCase):
 

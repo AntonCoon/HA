@@ -51,10 +51,22 @@ minimizer = ILPMinimizer.ILPMinimizer(
 minimizer.find_alpha(prep.eriksson_threshold / 10)
 big_val, result = minimizer.find_frequencies()
 
-result = [(h, f) for h, f in result.items() if f > prep.eriksson_threshold]
-result = Util.get_normalize_pair_list(result)
 
-print([f for h, f in result])
+# complete to reference
+indexes = dict()
+for k, v in ilp_prep.haplotypes_edges.items():
+    indexes[k] = (v[0][0].pos, v[-1][-1].pos + aligned_db.k)
+
+assembled = []
+for h, f in result.items():
+    if f > prep.eriksson_threshold / 10:
+        h = aligned_db.ref[:indexes[h][0]] + h + aligned_db.ref[indexes[h][1]:]
+        assembled.append((h, f))
+
+print()
+result = Util.get_normalize_pair_list(assembled)
+
+print([(len(h), f) for h, f in result])
 gt = Util.read_ground_truth(
     "../data/small_simul/u1.5e-5_s40_Ne1000/sequences00001/gt.txt"
 )

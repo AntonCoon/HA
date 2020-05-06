@@ -56,17 +56,19 @@ class AlignedDB(nx.DiGraph):
 
     def build(self):
         self.build_ref()
-        aligned_reads = defaultdict(list)
         with Util.BWAContextManager(self.path_to_reads, self.ref) as bwa:
             for read_object in tqdm(bwa.sam_file):
                 read = read_object.seq
+                read = "".join(
+                    [read[i] if i is not None else "_"
+                     for i, _ in read_object.aligned_pairs]
+                )
                 start, end = read_object.pos, read_object.aend
                 # take just whole aligned data
                 if start is None or end is None or read is None:
                     continue
                 if end - start != len(read):
                     continue
-                aligned_reads[read].append(start)
                 posed_kmers = [
                     (km1, km2, start + i) for i, (km1, km2) in enumerate(
                         Util.k_mer_pairs(read, self.k))

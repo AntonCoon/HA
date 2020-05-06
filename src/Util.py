@@ -154,6 +154,9 @@ class KMer(object):
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
 
+    def __repr__(self):
+        return "{} {}".format(self.seq, self.pos)
+
 
 def split_graph_by_paths(graph: DiGraph) -> list:
     paths = [[]]
