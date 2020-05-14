@@ -63,7 +63,7 @@ if __name__ == '__main__':
     aligned_db.build()
 
     # Make normalization of aligned De Bruijn graph
-    prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 1 - 10**-9)
+    prep = AlignedDBPreprocessor.AlignedDBPreprocessor(aligned_db, 1 - 10**-4)
     prep.normalize_parallel()
     prep.mean_by_path_parallel()
     prep.eriksson_clear()
@@ -79,7 +79,8 @@ if __name__ == '__main__':
     # Find optimal frequencies
     minimizer = ILPMinimizer.ILPMinimizer(
         aligned_db, ilp_prep.haplotypes_edges)
-    minimizer.find_alpha(prep.eriksson_threshold / 10)
+    print(prep.eriksson_threshold)
+    minimizer.find_alpha(prep.eriksson_threshold)
     _, result = minimizer.find_frequencies()
 
     indexes = dict()

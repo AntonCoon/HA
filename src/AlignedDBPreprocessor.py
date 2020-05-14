@@ -70,3 +70,9 @@ class AlignedDBPreprocessor(object):
             self.aligned_db.baskets[basket_key].remove(e)
         self.normalize_parallel()
         self.mean_by_path_parallel()
+        removable = []
+        for v in self.aligned_db:
+            if self.aligned_db.degree(v) == 0:
+                removable.append(v)
+        for v in removable:
+            self.aligned_db.remove_node(v)

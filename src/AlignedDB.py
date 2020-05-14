@@ -88,6 +88,10 @@ class AlignedDB(nx.DiGraph):
                         self.edges[(u, v)]['contig'] = contig
                         self.baskets[(u.pos, v.pos)].add((u, v))
 
+    def build_by_sam(self):
+        # to do
+        pass
+
     def find_haplotypes(self) -> tuple:
         self.haplotypes = []
         haplotypes_edges = dict()
@@ -100,11 +104,23 @@ class AlignedDB(nx.DiGraph):
                 srcs.append(vertex)
             elif outdeg == 0:
                 dsts.append(vertex)
-
-        for src, dst in product(srcs, dsts):
-            for path in nx.all_simple_paths(self, src, dst):
-                edge_path = list(zip(path[:-1], path[1:]))
-                haplotype = Util.get_haplotype_by_path(self, edge_path)
-                self.haplotypes.append(haplotype)
-                haplotypes_edges[haplotype] = edge_path
+        if len(srcs) * len(dsts) > 200:
+            print(len(srcs) * len(dsts))
+            print("light version [to many possible paths]")
+            for src, dst in tqdm(product(srcs, dsts)):
+                if nx.has_path(self, src, dst):
+                    path = nx.shortest_path(self, src, dst, weight="coverage")
+                    # for path in nx.all_simple_paths(self, src, dst):
+                    edge_path = list(zip(path[:-1], path[1:]))
+                    haplotype = Util.get_haplotype_by_path(self, edge_path)
+                    self.haplotypes.append(haplotype)
+                    haplotypes_edges[haplotype] = edge_path
+        else:
+            print("by all possible paths")
+            for src, dst in tqdm(product(srcs, dsts)):
+                for path in nx.all_simple_paths(self, src, dst):
+                    edge_path = list(zip(path[:-1], path[1:]))
+                    haplotype = Util.get_haplotype_by_path(self, edge_path)
+                    self.haplotypes.append(haplotype)
+                    haplotypes_edges[haplotype] = edge_path
         return self.haplotypes, haplotypes_edges
